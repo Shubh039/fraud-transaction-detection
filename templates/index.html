@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Card Fraud Detection</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #e0f7fa, #80deea);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 600px;
+            max-width: 90%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #00796b;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        form {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        label {
+            font-weight: 500;
+            color: #00796b;
+        }
+
+        input[type="number"], input[type="text"], select, input[type="date"], input[type="datetime-local"] {
+            padding: 10px;
+            border: 1px solid #00796b;
+            border-radius: 5px;
+            width: 100%;
+            box-sizing: border-box; /* Ensures padding is included in width */
+        }
+
+        input[type="submit"] {
+            background-color: #00796b;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #004d40;
+        }
+
+        #result {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 18px;
+            color: #00796b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Credit Card Fraud Detection</h1>
+        <form id="fraudForm">
+            <label for="category">Category:</label>
+            <select id="category" name="category" required>
+                <option value="" disabled selected>Select a category</option>
+                <option value="personal_care">Personal Care</option>
+                <option value="health_fitness">Health & Fitness</option>
+                <option value="misc_pos">Miscellaneous POS</option>
+                <option value="travel">Travel</option>
+                <option value="kids_pets">Kids & Pets</option>
+                <option value="shopping_pos">Shopping POS</option>
+                <option value="food_dining">Food & Dining</option>
+                <option value="home">Home</option>
+                <option value="entertainment">Entertainment</option>
+                <option value="shopping_net">Shopping Net</option>
+                <option value="misc_net">Miscellaneous Net</option>
+                <option value="grocery_pos">Grocery POS</option>
+                <option value="gas_transport">Gas & Transport</option>
+                <option value="grocery_net">Grocery Net</option>
+            </select>
+
+            <label for="amt">Amount:</label>
+            <input type="number" id="amt" name="amt" step="0.01" required>
+
+            <label for="gender">Gender:</label>
+            <select id="gender" name="gender" required>
+                <option value="" disabled selected>Select gender</option>
+                <option value="M">Male</option>
+                <option value="F">Female</option>
+            </select>
+
+            <label for="Region">Region:</label>
+            <select id="Region" name="Region" required>
+                <option value="" disabled selected>Select region</option>
+                <option value="South">South</option>
+                <option value="Rocky Mountains">Rocky Mountains</option>
+                <option value="Northeast">Northeast</option>
+                <option value="Midwest">Midwest</option>
+                <option value="Far West">Far West</option>
+                <option value="nan">Not Applicable</option>
+            </select>
+
+            <!-- New input fields -->
+            <label for="date_of_birth">Date of Birth:</label>
+            <input type="date" id="date_of_birth" name="date_of_birth" required>
+
+            <label for="transaction_date_time">Transaction Date and Time:</label>
+            <input type="datetime-local" id="trans_date_trans_time" name="trans_date_trans_time" required>
+
+            <input type="submit" value="Submit">
+        </form>
+
+        <!-- Add this line right after the submit button in your form -->
+        <div id="result" style="margin-top: 20px; font-size: 18px; color: #00796b;"></div>
+
+    </div>
+
+    <script>
+        document.getElementById("fraudForm").addEventListener("submit", function(event){
+            event.preventDefault();
+
+            // Gather form data
+            let formData = new FormData(document.getElementById("fraudForm"));
+            let formObject = {};
+            formData.forEach((value, key) => {
+                formObject[key] = value;
+            });
+
+            // Extract date_of_birth and trans_date_trans_time
+            let dateOfBirth = new Date(formObject['date_of_birth']);
+            let transactionDate = new Date(formObject['trans_date_trans_time']);
+
+            // Calculate age
+            let age = transactionDate.getFullYear() - dateOfBirth.getFullYear();
+            let monthDifference = transactionDate.getMonth() - dateOfBirth.getMonth();
+            if (monthDifference < 0 || (monthDifference === 0 && transactionDate.getDate() < dateOfBirth.getDate())) {
+                age--;
+            }
+
+            // Determine age group
+            let ageGroup = "";
+            if (age >= 14 && age < 18) {
+                ageGroup = "14-18";
+            } else if (age >= 18 && age < 35) {
+                ageGroup = "18-35";
+            } else if (age >= 35 && age < 60) {
+                ageGroup = "35-60";
+            } else if (age >= 60) {
+                ageGroup = "60+";
+            }
+
+            // Determine day period
+            let transactionHour = transactionDate.getHours();
+            let dayPeriod = "";
+            if (transactionHour >= 0 && transactionHour < 6) {
+                dayPeriod = "Night";
+            } else if (transactionHour >= 6 && transactionHour <= 12) {
+                dayPeriod = "Morning";
+            } else if (transactionHour > 12 && transactionHour <= 15) {
+                dayPeriod = "Afternoon";
+            } else if (transactionHour > 15 && transactionHour <= 20) {
+                dayPeriod = "Evening";
+            } else {
+                dayPeriod = "Night";
+            }
+
+            // Add calculated fields to the form object
+            formObject['age_group'] = ageGroup;
+            formObject['day_period'] = dayPeriod;
+
+            // Remove date_of_birth from the formObject
+            delete formObject.date_of_birth;
+            delete formObject.trans_date_trans_time;
+            // Send JSON to Flask API
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formObject)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("result").innerText = "Prediction Result: " + data.result;
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+    </script>
+    
+    
+</body>
+</html>
