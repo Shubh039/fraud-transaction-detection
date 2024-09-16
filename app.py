@@ -6,13 +6,6 @@ model = joblib.load('RF_model.pkl')
 
 app = Flask(__name__)
 
-def day_period(x):
-    if x >= 0 and x < 6: return "Night"
-    elif x >= 6 and x <= 12: return "Morning"
-    elif x > 12 and x <= 15: return "Afternoon"
-    elif x > 15 and x <= 20: return "Evening"
-    elif x > 20 and x <= 24: return "Night"
-
 @app.route('/')
 def index():
     return render_template('index.html')
