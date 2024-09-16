@@ -44,12 +44,14 @@
             color: #00796b;
         }
 
-        input[type="number"], input[type="text"], select, input[type="date"], input[type="datetime-local"] {
+        textarea {
             padding: 10px;
             border: 1px solid #00796b;
             border-radius: 5px;
             width: 100%;
             box-sizing: border-box; /* Ensures padding is included in width */
+            font-family: 'Roboto', sans-serif;
+            font-size: 14px;
         }
 
         input[type="submit"] {
@@ -81,134 +83,128 @@
     <div class="container">
         <h1>Credit Card Fraud Detection</h1>
         <form id="fraudForm">
-            <label for="category">Category:</label>
-            <select id="category" name="category" required>
-                <option value="" disabled selected>Select a category</option>
-                <option value="personal_care">Personal Care</option>
-                <option value="health_fitness">Health & Fitness</option>
-                <option value="misc_pos">Miscellaneous POS</option>
-                <option value="travel">Travel</option>
-                <option value="kids_pets">Kids & Pets</option>
-                <option value="shopping_pos">Shopping POS</option>
-                <option value="food_dining">Food & Dining</option>
-                <option value="home">Home</option>
-                <option value="entertainment">Entertainment</option>
-                <option value="shopping_net">Shopping Net</option>
-                <option value="misc_net">Miscellaneous Net</option>
-                <option value="grocery_pos">Grocery POS</option>
-                <option value="gas_transport">Gas & Transport</option>
-                <option value="grocery_net">Grocery Net</option>
-            </select>
-
-            <label for="amt">Amount:</label>
-            <input type="number" id="amt" name="amt" step="0.01" required>
-
-            <label for="gender">Gender:</label>
-            <select id="gender" name="gender" required>
-                <option value="" disabled selected>Select gender</option>
-                <option value="M">Male</option>
-                <option value="F">Female</option>
-            </select>
-
-            <label for="Region">Region:</label>
-            <select id="Region" name="Region" required>
-                <option value="" disabled selected>Select region</option>
-                <option value="South">South</option>
-                <option value="Rocky Mountains">Rocky Mountains</option>
-                <option value="Northeast">Northeast</option>
-                <option value="Midwest">Midwest</option>
-                <option value="Far West">Far West</option>
-                <option value="nan">Not Applicable</option>
-            </select>
-
-            <!-- New input fields -->
-            <label for="date_of_birth">Date of Birth:</label>
-            <input type="date" id="date_of_birth" name="date_of_birth" required>
-
-            <label for="transaction_date_time">Transaction Date and Time:</label>
-            <input type="datetime-local" id="trans_date_trans_time" name="trans_date_trans_time" required>
-
+            <label for="jsonInput">Input JSON:</label>
+            <textarea id="jsonInput" name="jsonInput" rows="10" required placeholder='ENTER JSON'></textarea>
             <input type="submit" value="Submit">
         </form>
 
-        <!-- Add this line right after the submit button in your form -->
-        <div id="result" style="margin-top: 20px; font-size: 18px; color: #00796b;"></div>
-
+        <div id="result"></div>
     </div>
 
     <script>
         document.getElementById("fraudForm").addEventListener("submit", function(event){
-            event.preventDefault();
+        event.preventDefault();
 
-            // Gather form data
-            let formData = new FormData(document.getElementById("fraudForm"));
-            let formObject = {};
-            formData.forEach((value, key) => {
-                formObject[key] = value;
-            });
+        // Parse JSON input
+        let jsonInput = document.getElementById("jsonInput").value;
+        let formObject;
+        try {
+            formObject = JSON.parse(jsonInput);
+        } catch (error) {
+            document.getElementById("result").innerText = "Invalid JSON format.";
+            return;
+        }
 
-            // Extract date_of_birth and trans_date_trans_time
-            let dateOfBirth = new Date(formObject['date_of_birth']);
-            let transactionDate = new Date(formObject['trans_date_trans_time']);
+        // Define the state to region mapping
+        const stateToRegion = {
+            'ME': 'Northeast', 'NH': 'Northeast', 'VT': 'Northeast',
+            'MA': 'Northeast', 'RI': 'Northeast', 'CT': 'Northeast',
+            'NY': 'Northeast', 'NJ': 'Northeast', 'PA': 'Northeast',
+            'OH': 'Midwest', 'IN': 'Midwest', 'IL': 'Midwest', 'MI': 'Midwest',
+            'WI': 'Midwest', 'MN': 'Midwest', 'IA': 'Midwest', 'MO': 'Midwest',
+            'ND': 'Midwest', 'SD': 'Midwest', 'NE': 'Midwest', 'KS': 'Midwest',
+            'DE': 'South', 'MD': 'South', 'DC': 'South', 'VA': 'South',
+            'WV': 'South', 'NC': 'South', 'SC': 'South',
+            'GA': 'South', 'FL': 'South', 'AL': 'South', 'MS': 'South',
+            'TN': 'South', 'KY': 'South', 'AR': 'South', 'LA': 'South',
+            'OK': 'South', 'TX': 'South', 'MT': 'Rocky Mountains', 'WY': 'Rocky Mountains',
+            'CO': 'Rocky Mountains', 'NM': 'Rocky Mountains', 'ID': 'Rocky Mountains',
+            'UT': 'Rocky Mountains', 'WA': 'Far West', 'OR': 'Far West',
+            'CA': 'Far West', 'HI': 'Far West', 'AK': 'Far West'
+        };
 
-            // Calculate age
-            let age = transactionDate.getFullYear() - dateOfBirth.getFullYear();
-            let monthDifference = transactionDate.getMonth() - dateOfBirth.getMonth();
-            if (monthDifference < 0 || (monthDifference === 0 && transactionDate.getDate() < dateOfBirth.getDate())) {
-                age--;
-            }
+        // Extract state and map it to region
+        let state = formObject['state'];
+        if (state) {
+            formObject['Region'] = stateToRegion[state] || 'Not Applicable';
+        }
 
-            // Determine age group
-            let ageGroup = "";
-            if (age >= 14 && age < 18) {
-                ageGroup = "14-18";
-            } else if (age >= 18 && age < 35) {
-                ageGroup = "18-35";
-            } else if (age >= 35 && age < 60) {
-                ageGroup = "35-60";
-            } else if (age >= 60) {
-                ageGroup = "60+";
-            }
+        // Extract date_of_birth and trans_date_trans_time
+        let dateOfBirth = new Date(formObject['dob']);
+        let transactionDate = new Date(formObject['trans_date_trans_time']);
 
-            // Determine day period
-            let transactionHour = transactionDate.getHours();
-            let dayPeriod = "";
-            if (transactionHour >= 0 && transactionHour < 6) {
-                dayPeriod = "Night";
-            } else if (transactionHour >= 6 && transactionHour <= 12) {
-                dayPeriod = "Morning";
-            } else if (transactionHour > 12 && transactionHour <= 15) {
-                dayPeriod = "Afternoon";
-            } else if (transactionHour > 15 && transactionHour <= 20) {
-                dayPeriod = "Evening";
-            } else {
-                dayPeriod = "Night";
-            }
+        // Calculate age
+        let age = transactionDate.getFullYear() - dateOfBirth.getFullYear();
+        let monthDifference = transactionDate.getMonth() - dateOfBirth.getMonth();
+        if (monthDifference < 0 || (monthDifference === 0 && transactionDate.getDate() < dateOfBirth.getDate())) {
+            age--;
+        }
 
-            // Add calculated fields to the form object
-            formObject['age_group'] = ageGroup;
-            formObject['day_period'] = dayPeriod;
+        // Determine age group
+        let ageGroup = "";
+        if (age >= 14 && age < 18) {
+            ageGroup = "14-18";
+        } else if (age >= 18 && age < 35) {
+            ageGroup = "18-35";
+        } else if (age >= 35 && age < 60) {
+            ageGroup = "35-60";
+        } else if (age >= 60) {
+            ageGroup = "60+";
+        }
 
-            // Remove date_of_birth from the formObject
-            delete formObject.date_of_birth;
-            delete formObject.trans_date_trans_time;
-            // Send JSON to Flask API
-            fetch('/predict', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formObject)
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("result").innerText = "Prediction Result: " + data.result;
-            })
-            .catch(error => console.error('Error:', error));
+        // Determine day period
+        let transactionHour = transactionDate.getHours();
+        let dayPeriod = "";
+        if (transactionHour >= 0 && transactionHour < 6) {
+            dayPeriod = "Night";
+        } else if (transactionHour >= 6 && transactionHour <= 12) {
+            dayPeriod = "Morning";
+        } else if (transactionHour > 12 && transactionHour <= 15) {
+            dayPeriod = "Afternoon";
+        } else if (transactionHour > 15 && transactionHour <= 20) {
+            dayPeriod = "Evening";
+        } else {
+            dayPeriod = "Night";
+        }
+
+        // Add calculated fields to the form object
+        formObject['age_group'] = ageGroup;
+        formObject['day_period'] = dayPeriod;
+
+        // Remove date_of_birth and state from the formObject
+        delete formObject.date_of_birth;
+        delete formObject.state;
+
+        // Construct the final JSON object with required fields
+        let finalObject = {
+            'category': formObject['category'],
+            'gender': formObject['gender'],
+            'Region': formObject['Region'],
+            'age_group': ageGroup,
+            'day_period': dayPeriod,
+            'amt': formObject['amt']
+        };
+
+        console.log(finalObject);
+
+        // Send JSON to Flask API
+        fetch('/predict', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(finalObject)
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("result").innerText = "Prediction Result: " + data.result;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById("result").innerText = "Error in prediction.";
         });
+    });
 
     </script>
-    
-    
 </body>
 </html>
