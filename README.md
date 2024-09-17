@@ -135,7 +135,7 @@ This project showcases the power of combining advanced machine learning techniqu
 
 Thank you for exploring this project. For further details or to contribute, please feel free to reach out via email at [SHUBHANK SHARMA](mailto:shubhanks039@gmail.com) or review the code in the repository.
 
-
+HOSTED LINK OF THE PROJECT : [FRAUD DETECTION](https://fraud-detection-assignment.onrender.com)
 
 
    
